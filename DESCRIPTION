@@ -1,8 +1,7 @@
 Package: csv
 Type: Package
 Title: Read and Write CSV Files with Selected Conventions
-Version: 0.4
-Date: 2017-02-18
+Version: 0.5
 Author: Tim Bergsma
 Maintainer: Tim Bergsma <bergsmat@gmail.com>
 Description: Reads and writes CSV with selected conventions.
@@ -13,6 +12,6 @@ Imports:
 Suggests:
 RoxygenNote: 6.0.1
 NeedsCompilation: no
-Packaged: 2017-02-21 15:55:59 UTC; tbergsma
+Packaged: 2017-07-10 19:38:19 UTC; tbergsma
 Repository: CRAN
-Date/Publication: 2017-02-21 17:23:37
+Date/Publication: 2017-07-10 22:01:18 UTC
