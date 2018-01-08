@@ -21,7 +21,7 @@
 \item{...}{passed arguments}
 }
 \value{
-data.frame
+data.frame, with attribute 'source' set to x
 }
 \description{
 Treat a character string as a CSV filename.
