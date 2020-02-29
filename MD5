@@ -1,9 +1,9 @@
-f83a42e449e1981b157ed45138c1959a *DESCRIPTION
+9eb895adff21fe46824c1c1426477f97 *DESCRIPTION
 480c30f2d85bd07a9f9d6afc3ab81a93 *NAMESPACE
-954b4daa1587ec1778d2a4f560ea7a85 *R/csv.R
+8364f49940e17f8dc435cf5fe6f9a21f *R/csv.R
 e01369106a4153e93331841c30e9eb42 *man/as.csv.Rd
 d9f0f488c5cdc8a9aa72ec780ac824dc *man/as.csv.character.Rd
-b905c18e0c4a6d0af397fba7e1761a05 *man/as.csv.data.frame.Rd
+21eb6dfca92387702165d0db1fa58369 *man/as.csv.data.frame.Rd
 f85aae28a47be1c11d0d5029fbbe0d82 *man/autoquote.Rd
 54bc1f8313510d059bf1c18ff5d51cc2 *man/autoquote.character.Rd
 437f177c26ba214e5d5e0ee49a2ce64f *man/autoquote.default.Rd
