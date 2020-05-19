@@ -85,6 +85,8 @@ as.csv.character <- function(
 #' @param ... passed to \code{\link{write.csv}} if accepted by \code{\link{write.table}}
 #' @return invisible data.frame (x)
 #' @export
+#' @import dplyr
+#' @importFrom stringi stri_detect_fixed
 #' @family as.csv
 #' @examples 
 #' x <- data.frame(
@@ -103,17 +105,26 @@ as.csv.character <- function(
 #' stopifnot(identical(x,y))
 
 as.csv.data.frame <- function(x, file, na='.', quote=FALSE, auto=!quote, row.names=FALSE, ...){
-  comma <- sapply(x,function(col) any(grepl(',',col)))
-  nms <- names(comma)[comma]
-  if(length(nms) & !quote & !auto)warning(
-    'quote and auto are false but found comma(s) in ',
-    paste(nms,collapse=', ')
-  )
-  dup <- x[duplicated(x),,drop = FALSE]
-  if(nrow(dup))warning(
-    'found duplicate(s) e.g.:\n',
-    paste(t(dup[1,]),collapse=', ')
-  )
+  if(!quote & !auto){
+   comma <- sapply(x, has_comma)
+    nms <- names(comma)[comma]
+    if(length(nms))warning(
+      'quote and auto are false but found comma(s) in ',
+       paste(nms,collapse=', ')
+    )
+  }
+  # dup <- x[duplicated(x),,drop = FALSE]
+  # dup <- data.frame(dup)
+  dup <- dup_at(x)
+  if(dup > 0){
+    warning(
+      'found duplicate(s) at record ',dup, ' e.g.:\n',
+      paste(
+        t(x[dup,]),
+        collapse=', '
+      )
+    )
+  }
   if(auto)x[] <- lapply(x, autoquote)
   if(auto)names(x) <- autoquote(names(x))
   args <- list(...)
@@ -128,14 +139,79 @@ as.csv.data.frame <- function(x, file, na='.', quote=FALSE, auto=!quote, row.nam
   )
   invisible(x)
 }
-
+has_comma <- function(x){
+  y <- format(x)
+  matches <- stringi::stri_detect_fixed(y, ',', max_count = 1)
+  present <- any(na.rm = TRUE, matches)
+  return(present)
+}
 .autoquote <- function(x,...){
-  hasComma <- grepl(',',x)
-  hasQuote <- grepl('"',x)
+  hasComma <- stri_detect_fixed(x, ',')
+  hasComma[is.na(hasComma)] <- FALSE
+  hasQuote <- stri_detect_fixed(x, '"')
+  hasQuote[is.na(hasQuote)] <- FALSE
   mustQuote <- hasComma | hasQuote
   x[hasQuote] <- gsub('"','""', x[hasQuote])
   x[mustQuote] <- paste0('"',x[mustQuote],'"')
   x
+}
+
+# for two data.frames and an i valid on x, 
+# where y is distinct(x), 
+# either i and i-1 both match, both mismatch, or split.
+dfmatch <- function(x,y)isTRUE(all_equal(x,y,ignore_row_order = FALSE))
+continuity <- function(x, y, i){
+  if(i > nrow(x)) stop('i greater than nrow(x)')
+  if(i-1 > nrow(y)) return(1)
+  if(i > nrow(y)){
+    if(dfmatch(x[i-1,], y[i-1,])){
+      return(0)
+    } else{
+      return(1)
+    }
+  }
+  # now i and i-1 valid on both
+  a <- dfmatch(x[i-1,], y[i-1,])
+  b <- dfmatch(x[i,], y[i,])
+  if(a & b) return(-1)
+  if(!a & !b) return(1)
+  # now only one of these matches, likely a
+  return(0)
+}
+# firstDifference <- function(x, y, i = 2, lo = 2, hi = nrow(x), ...){
+#   stopifnot(nrow(y) < nrow(x))
+#   # now y i.e. distinct x must have at least 1 record, and x at least 2
+#   res <- continuity(x, y, i)
+#   stopifnot(res %in% -1:1)
+#   if(res == 0)return(i)
+#   if(res == -1) lo = lo + 1
+#   if(res ==  1) hi = hi - 1
+#   can <- seq(from = lo, to = hi)
+#   i <- can[[ceiling(length(can)/2)]]
+#   return(firstDifference(x, y, i = i, lo = lo, hi = hi ))
+# }
+firstDifference <- function(x, y, i = 2, lo = 2, hi = nrow(x), ...){
+  stopifnot(nrow(y) < nrow(x))
+  # now y i.e. distinct x must have at least 1 record, and x at least 2
+  res <- continuity(x, y, i)
+  stopifnot(res %in% -1:1)
+  while(res != 0){
+    # cat('i =',i,'\n')
+    if(res == -1) lo = i + 1
+    if(res ==  1) hi = i - 1 
+    can <- seq(from = lo, to = hi)
+    i <- can[[ceiling(length(can)/2)]]
+    res <- continuity(x, y, i)
+    stopifnot(res %in% -1:1)
+  }
+  # now res is 0 with current value of i
+  return(i)
+}
+
+dup_at <- function(x){
+  y <- distinct(x)
+  if(nrow(y) == nrow(x)) return(0)
+  return(firstDifference(x, y))
 }
 
 #' Autoquote
@@ -182,7 +258,3 @@ autoquote.factor <- function(x,...){
   levels(x) <- autoquote(levels(x))
   x
 }
-
-
-
-
